@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>536 無毒草莓園 - 知識大挑戰</title>
+    <style>
+        /* --- 全局變數 --- */
+        :root {
+            --primary-color: #d32f2f;
+            --bg-color: #fff0f5;
+            --card-bg: #ffffff;
+            --correct-color: #2e7d32;
+            --wrong-color: #c62828;
+            --score-color: #f57f17;
+        }
+
+        body {
+            font-family: "Microsoft JhengHei", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            line-height: 1.5;
+            user-select: none;
+        }
+
+        h1, h2, h3 { color: var(--primary-color); margin: 5px 0; }
+        
+        button {
+            cursor: pointer; border: none; border-radius: 50px;
+            padding: 12px 20px; font-size: 16px; font-weight: bold;
+            margin: 5px; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        button:active { transform: scale(0.95); }
+
+        .btn-start { background: linear-gradient(135deg, #ff5252, #d32f2f); color: white; width: 90%; max-width: 350px; display: block; margin: 10px auto; }
+        .btn-casual { background: linear-gradient(135deg, #42a5f5, #1976d2); color: white; width: 90%; max-width: 350px; display: block; margin: 10px auto; }
+        .btn-surrender { background-color: #757575; color: white; font-size: 14px; padding: 6px 12px; }
+        .btn-copy { background-color: #607d8b; color: white; font-size: 14px; padding: 8px 20px; margin-top: 10px; display: inline-block; }
+
+        .section { display: none; max-width: 600px; margin: 0 auto; background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 2px solid #eee; }
+        .stat-box { font-size: 18px; font-weight: bold; }
+        #timer-display { color: var(--primary-color); }
+        #score-display { color: var(--score-color); }
+
+        .progress-container { width:100%; height:6px; background:#eee; border-radius:3px; overflow:hidden; margin-bottom: 15px;}
+        #progress-bar { width:0%; height:100%; background:var(--primary-color); transition: width 0.3s; }
+
+        #question-cat-tag { display: inline-block; background: #eee; color: #666; font-size: 12px; padding: 2px 8px; border-radius: 4px; margin-bottom: 5px; }
+        .question-box { font-size: 20px; margin: 10px 0 20px; font-weight: bold; min-height: 50px; }
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn { background-color: #fff; border: 2px solid #ffcdcd; color: #444; padding: 15px; border-radius: 12px; font-size: 18px; text-align: left; position: relative;}
+        .option-btn:hover { background-color: #ffe6e6; }
+        .opt-label { font-weight: bold; color: var(--primary-color); margin-right: 10px; }
+
+        #feedback-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 100; display: none;
+            justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: white; width: 85%; max-width: 400px; padding: 25px;
+            border-radius: 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        .modal-icon { font-size: 40px; margin-bottom: 10px; display: block; }
+        .modal-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+        .modal-desc { text-align: left; background: #f9f9f9; padding: 10px; border-radius: 8px; font-size: 14px; color: #555; margin-bottom: 20px; border-left: 4px solid var(--primary-color); }
+        .btn-next { background-color: var(--primary-color); color: white; width: 100%; }
+
+        #promo-code-container { background-color: #ffebee; border: 3px dashed var(--primary-color); padding: 15px; margin: 15px 0; border-radius: 10px; }
+        #promo-code-box { font-family: monospace; font-size: 24px; font-weight: 900; color: var(--primary-color); letter-spacing: 2px; user-select: text; }
+        .result-score-big { font-size: 40px; color: var(--score-color); font-weight: bold; margin: 10px 0; }
+        
+        #analysis-list { text-align: left; margin-top: 20px; max-height: 300px; overflow-y: auto; font-size: 14px; }
+        .analysis-item { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .correct-text { color: var(--correct-color); font-weight: bold; }
+        .wrong-text { color: var(--wrong-color); font-weight: bold; }
+
+        .social-area { margin-top: 30px; }
+        .btn-map { background-color: #4285F4; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; display: inline-block; font-size: 14px; }
+        .btn-line { background-color: #06c755; color: white; text-decoration: none; display: inline-block; padding: 12px 30px; border-radius: 50px; font-weight: bold; }
+        
+        /* 上傳狀態提示 */
+        #upload-status { font-size: 12px; color: #888; margin-top: 5px; font-style: italic;}
+    </style>
+</head>
+<body>
+
+    <div id="home-section" class="section active">
+        <h1>🍓 536 草莓知識王</h1>
+        <p style="color: #666;">總共25題，每題10分<br>只要達到 <strong>100分</strong> 即可獲得優惠碼！</p>
+        <p style="font-size: 12px; color: #d32f2f;">⚠️ 請開啟手機音效以獲得最佳體驗</p>
+
+        <div style="margin-top: 20px;">
+            <h3 style="font-size: 16px; color: #888;">⚡ 限時挑戰 (滿分250)</h3>
+            <button class="btn-start" onclick="startGame('speed', 30, 100)">
+                Level 1：30秒快手
+            </button>
+            <button class="btn-start" onclick="startGame('speed', 60, 130)">
+                Level 2：60秒專家
+            </button>
+            <button class="btn-start" onclick="startGame('speed', 120, 160)">
+                Level 3：120秒大師
+            </button>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="font-size: 16px; color: #888;">🎓 練習模式</h3>
+            <button class="btn-casual" onclick="startGame('casual', 0, 0)">
+                輕鬆回答 (無倒數 + 即時解析)
+            </button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 25px 0;">
+       <div class="social-area">
+            <a href="https://www.google.com/maps/place/@24.0164299,120.6560303,17z/data=!4m18!1m9!3m8!1s0x34693b83f1c18a45:0x8001717d1207a9e5!2zNTM254Sh5q-S6I2J6I6T5ZyS77yI5pys5ZySMeaciOS7veeUoumHj-W-iOWwke-8jOebruWJjeWBh-aXpeWPqumWi-mAseWFreaXqeS4ig!8m2!3d24.0164299!4d120.6560303!9m1!1b1!16s%2Fg%2F11h259zj2b!3m7!1s0x34693b83f1c18a45:0x8001717d1207a9e5!8m2!3d24.0164299!4d120.6560303!9m1!1b1!16s%2Fg%2F11h259zj2b?entry=ttu&g_ep=EgoyMDI2MDExMy4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-map">
+                📍  536無毒草莓園Google 地圖評論
+            </a>
+        
+        </div>
+        <div class="social-area">
+            <a href="https://www.facebook.com/536farm" target="_blank" class="btn-map">
+                🍓  536無毒草莓園FB粉絲專頁
+            </a>
+        
+        </div>
+    </div>
+
+    <div id="game-section" class="section">
+        <div id="game-header">
+            <div class="stat-box" id="timer-display">⏱️ 30</div>
+            <div class="stat-box" id="score-display">🏆 0</div>
+            <button class="btn-surrender" onclick="surrenderGame()">🏳️ 投降</button>
+        </div>
+        
+        <div class="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+
+        <div id="question-container">
+            <span id="question-cat-tag">分類</span>
+            <div id="q-text" class="question-box">題目載入中...</div>
+            <div id="options-area" class="options-grid"></div>
+        </div>
+    </div>
+
+    <div id="feedback-modal">
+        <div class="modal-content">
+            <span id="modal-icon" class="modal-icon">⭕</span>
+            <div id="modal-title" class="modal-title">答對了！</div>
+            <div id="modal-desc" class="modal-desc">解析內容...</div>
+            <button class="btn-next" onclick="closeModal()">下一題</button>
+        </div>
+    </div>
+
+    <div id="result-section" class="section">
+        <h2 id="result-title">挑戰結束！</h2>
+        
+        <div class="result-score-big" id="final-score">0分</div>
+        <p id="score-comment" style="color:#666; font-size:14px;"></p>
+
+        <div id="success-area" style="display:none;">
+            <p style="color: green; font-weight: bold; font-size: 1.2rem;">🎉 恭喜！您已達成100分門檻！</p>
+            <div id="promo-code-container">
+                <div id="promo-code-box">CODE123</div>
+                <button id="btn-copy" class="btn-copy" onclick="copyCode()">📋 點我複製代碼</button>
+                <div id="upload-status"></div> </div>
+            <a href="https://line.me/R/ti/p/@627qyhqy" target="_blank" class="btn-line">👉 前往 LINE 抽獎</a>
+        </div>
+
+        <div id="fail-area" style="display:none;">
+            <p id="fail-msg" style="color: #c62828; font-weight: bold;">很可惜，分數未達 100 分。</p>
+            <p>別氣餒，再去「練習模式」複習一下吧！</p>
+        </div>
+
+        <button class="btn-surrender" onclick="surrenderGame()" style="margin-top: 20px; width: 100%;">🏠 回到首頁</button>
+
+        <hr style="margin: 20px 0;">
+        <h3>📋 答題解析列表</h3>
+        <div id="analysis-list"></div>
+    </div>
+   <script>
+        // ========================================================
+        // ★★★ 請將您的 Google Apps Script 網址貼在下方引號內 ★★★
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzCHbrm5g5wThYZQmD-Xkp7xJAvoVCnAtwT0MftUbWnXEjYZEGQyftyUfJ2mPfXUwmU/exec"; 
+        // ========================================================
+        /* ------------------------------------------------------------------ */
+        /* 👇 完整題庫資料庫 */
+        /* 請在此處填回您完整的125題資料庫 */
+        /* ------------------------------------------------------------------ */
+        const fullQuestionDatabase = {
+            cat1: [
+                { q: "草莓在植物學上跟誰是親戚？", options: ["玫瑰", "百合", "向日葵"], ans: 0, desc: "草莓屬於薔薇科，跟玫瑰花是親戚喔！" },
+                { q: "草莓表面的「小芝麻」其實是什麼？", options: ["種子", "果實", "蟲卵"], ans: 1, desc: "紅紅的果肉其實是花托，表面一顆顆的瘦果才是真正的果實。" },
+                { q: "一顆普通草莓表面約有幾顆種子？", options: ["50顆", "200顆", "1000顆"], ans: 1, desc: "平均大約 200 顆，每一顆都是一個生命！" },
+                { q: "唯一種子長在「外面」的水果是？", options: ["奇異果", "草莓", "火龍果"], ans: 1, desc: "大多數水果種子都在果肉裡，只有草莓這麼特別。" },
+                { q: "草莓最好的授粉小幫手是？", options: ["蝴蝶", "蜜蜂", "蒼蠅"], ans: 1, desc: "蜜蜂授粉均勻，草莓才會長得形狀漂亮。" },
+                { q: "草莓剛長出來是什麼顏色？", options: ["白色", "綠色", "紫色"], ans: 1, desc: "從小時候的綠色，慢慢轉白，最後變成紅色。" },
+                { q: "現代大草莓的祖先來自哪裡？", options: ["美洲", "非洲", "澳洲"], ans: 0, desc: "現代草莓多是源自美洲品種的雜交。" },
+                { q: "歐洲人認為草莓像什麼形狀象徵愛？", options: ["嘴唇", "心形", "寶石"], ans: 1, desc: "心形的外觀讓它成為愛的象徵。" },
+                { q: "白色草莓通常帶有什麼香氣？", options: ["鳳梨或水蜜桃", "榴槤", "咖啡"], ans: 0, desc: "白草莓如桃薰，帶有淡淡水蜜桃香。" },
+                { q: "Strawberry 的 Straw 可能是指？", options: ["吸管", "稻草鋪底", "綠帽"], ans: 1, desc: "種植時會在底下鋪稻草防止果實爛掉，故名 Strawberry。" },
+                { q: "草莓摘下來後還會變紅變甜嗎？", options: ["會", "不會"], ans: 1, desc: "草莓是非更年性水果，摘下來就不會再變甜了，要選全紅的！" },
+                { q: "世界最重的草莓大約多重？", options: ["120g", "290g", "430g"], ans: 1, desc: "金氏世界紀錄最重草莓重達 289g，非常驚人。" },
+                { q: "草莓花通常有幾片花瓣？", options: ["3片", "5~6片", "10片"], ans: 1, desc: "正常的草莓花約有 5 到 6 片白色花瓣。" },
+                { q: "日本聖誕蛋糕必放草莓是因為？", options: ["紅白配色喜氣", "便宜", "驅邪"], ans: 0, desc: "紅白配色象徵聖誕節的喜慶。" },
+                { q: "白草莓的外觀是？", options: ["綠皮紅籽", "白皮紅籽", "黑皮白籽"], ans: 1, desc: "這是一種特殊的白色品種，種子是紅色的。" },
+                { q: "草莓是偽果，那什麼才是真果？", options: ["西瓜", "表面顆粒", "葉子"], ans: 1, desc: "那些小顆粒(瘦果)才是真正的果實。" },
+                { q: "草莓繁殖用的長莖叫做？", options: ["走莖", "飛莖", "爬莖"], ans: 0, desc: "草莓會伸出走莖長出新的小苗。" },
+                { q: "草莓的香氣主要存在哪裡？", options: ["葉子", "果肉與種子旁", "根部"], ans: 1, desc: "成熟的果肉與種子周圍香氣最濃。" },
+                { q: "為什麼昆蟲都愛吃草莓？", options: ["香氣太誘人", "只吃紅色", "為了磨牙"], ans: 0, desc: "草莓的香氣對昆蟲來說非常有吸引力。" },
+                { q: "比利時有一個專門為草莓設立的？", options: ["監獄", "博物館", "遊樂園"], ans: 1, desc: "草莓在當地非常重要，甚至有博物館。" },
+                { q: "溫布頓網球賽的傳統點心是？", options: ["炸魚薯條", "奶油草莓", "司康"], ans: 1, desc: "這是溫布頓的百年傳統。" },
+                { q: "草莓的基因是幾倍體？", options: ["二倍體", "八倍體", "四倍體"], ans: 1, desc: "草莓基因比人類還複雜，是八倍體。" },
+                { q: "六月的滿月被原住民稱為？", options: ["草莓月亮", "蘋果月亮", "香蕉月亮"], ans: 0, desc: "因為這是採收草莓的季節。" },
+                { q: "草莓長得像雞冠通常是因為？", options: ["授粉養分問題", "生病", "品種"], ans: 0, desc: "這種畸形果通常特別甜喔！" },
+                { q: "草莓也是一種中藥材嗎？", options: ["是，潤肺", "不是，瞎掰"], ans: 0, desc: "本草綱目記載，草莓有潤肺生津的功效。" }
+            ],
+            cat2: [
+                { q: "草莓維他命C比檸檬高嗎？", options: ["是", "否", "一樣"], ans: 0, desc: "草莓維生素C含量比檸檬高，吃10顆就達標。" },
+                { q: "吃幾顆草莓能滿足一日維他命C？", options: ["30顆", "10顆左右", "50顆"], ans: 1, desc: "不用吃太多，10顆中型草莓就足夠了。" },
+                { q: "準媽媽適合吃草莓因為富含？", options: ["葉酸", "咖啡因", "酒精"], ans: 0, desc: "葉酸對胎兒發育非常重要。" },
+                { q: "鮮紅色外表來自哪種抗氧化劑？", options: ["花青素", "葉綠素", "胡蘿蔔素"], ans: 0, desc: "花青素是很棒的天然抗氧化劑。" },
+                { q: "草莓屬於低GI還是高GI水果？", options: ["低GI", "高GI", "中GI"], ans: 0, desc: "草莓升糖指數低，糖尿病友也能適量吃。" },
+                { q: "吃草莓助牙齒亮白是因為含有？", options: ["蘋果酸", "鹽酸", "硫酸"], ans: 0, desc: "天然的蘋果酸有助於去除牙漬。" },
+                { q: "草莓豐富的鉀有助於？", options: ["消水腫降血壓", "增加體重", "長高"], ans: 0, desc: "鉀離子可以幫助排出多餘的鈉。" },
+                { q: "草莓含有的鞣花酸功能是？", options: ["保護細胞抗氧化", "變成超人", "增加視力"], ans: 0, desc: "鞣花酸具有很好的抗氧化效果。" },
+                { q: "草莓的水分含量大約是？", options: ["50%", "90%", "30%"], ans: 1, desc: "草莓其實大部分都是水，補水好幫手。" },
+                { q: "草莓果膠有助於？", options: ["腸道蠕動", "失眠", "生髮"], ans: 0, desc: "膳食纖維能幫助消化。" },
+                { q: "為了保護視力吃草莓有用嗎？", options: ["有", "沒有"], ans: 0, desc: "含有維生素A和花青素，對眼睛好。" },
+                { q: "草莓含不含膽固醇？", options: ["不含", "含"], ans: 0, desc: "水果通常都不含膽固醇。" },
+                { q: "感冒時吃草莓有幫助嗎？", options: ["有，補C", "沒有", "會惡化"], ans: 0, desc: "維生素C能輔助免疫系統。" },
+                { q: "哪種顏色草莓花青素較高？", options: ["深紅色", "白色", "綠色"], ans: 0, desc: "顏色越紅，花青素通常越多。" },
+                { q: "運動完適合吃草莓嗎？", options: ["適合", "不適合"], ans: 0, desc: "補充天然醣分和水分，很適合。" },
+                { q: "草莓籽能不能被消化？", options: ["能", "不能但助清理"], ans: 1, desc: "雖然不能消化，但能像刷子一樣清理腸道。" },
+                { q: "常用電腦的人適合吃草莓因含有？", options: ["維生素A", "尼古丁", "咖啡因"], ans: 0, desc: "維生素A對眼睛疲勞有幫助。" },
+                { q: "草莓有助於情緒放鬆嗎？", options: ["有", "沒有"], ans: 0, desc: "香氣和成分有助於舒緩壓力。" },
+                { q: "減肥時可以把草莓當點心嗎？", options: ["可以，熱量低", "不行"], ans: 0, desc: "100g才32大卡，是減肥聖品。" },
+                { q: "痛風患者可以吃草莓嗎？", options: ["適量", "絕對不行"], ans: 0, desc: "草莓是鹼性食物，適量無妨。" },
+                { q: "草莓搭配優格的好處？", options: ["助脂溶性吸收", "會爆炸", "沒好處"], ans: 0, desc: "優格的油脂能幫助維生素吸收。" },
+                { q: "草莓熱量(每100g)大約？", options: ["32大卡", "300大卡", "500大卡"], ans: 0, desc: "屬於低熱量水果。" },
+                { q: "小朋友吃草莓要注意？", options: ["剪碎防噎", "沾辣椒", "不洗"], ans: 0, desc: "除了防噎，也要確認是否有過敏。" },
+                { q: "草莓葉泡茶的傳統用途？", options: ["緩解腹瀉", "洗頭", "染布"], ans: 0, desc: "傳統草藥學中會用草莓葉泡茶。" },
+                { q: "草莓是不是超級食物？", options: ["是", "不是"], ans: 0, desc: "營養密度高，被列為超級食物之一。" }
+            ],
+            cat3: [
+                { q: "洗草莓時，蒂頭什麼時候摘？", options: ["洗完再摘", "洗前先摘", "邊洗邊摘"], ans: 0, desc: "先摘再洗會讓髒水跑進去，所以要洗完再摘。" },
+                { q: "草莓怎麼洗最乾淨？", options: ["流動水沖", "用力搓", "泡鹽水"], ans: 0, desc: "細水長流沖洗 10 分鐘最乾淨。" },
+                { q: "草莓從哪邊吃會覺得越來越甜？", options: ["蒂頭往尖端", "尖端往蒂頭", "中間開始"], ans: 0, desc: "尖端最甜，從蒂頭開始吃會有倒吃甘蔗的感覺。" },
+                { q: "買回家的草莓如何保存？", options: ["不洗乾燥放冰箱", "洗好放冰箱", "切片放冰箱"], ans: 0, desc: "碰水易爛，保持乾燥才能久放。" },
+                { q: "台灣草莓主要產季？", options: ["冬到春", "夏天", "秋天"], ans: 0, desc: "每年 12 月到 4 月是最佳產季。" },
+                { q: "種子呈現什麼顏色代表熟度好？", options: ["金黃或紅", "綠色", "白色"], ans: 0, desc: "種子變紅變深代表成熟度高。" },
+                { q: "草莓如果有傷口？", options: ["盡快吃掉", "放著不管", "貼OK繃"], ans: 0, desc: "傷口容易發霉，要盡快解決。" },
+                { q: "草莓沾煉乳是為了？", options: ["增香中和酸", "變硬", "殺菌"], ans: 0, desc: "奶香能中和酸味，提升口感。" },
+                { q: "草莓靠近葉子處白白代表？", options: ["未完全熟", "生病", "品種"], ans: 0, desc: "那是因為花青素還沒完全覆蓋，代表還不夠熟。" },
+                { q: "切草莓片最簡單的工具？", options: ["切蛋器", "電鋸", "剪刀"], ans: 0, desc: "切蛋器可以切出完美的草莓薄片。" },
+                { q: "快速去蒂頭可以用？", options: ["吸管戳", "湯匙挖", "牙籤"], ans: 0, desc: "吸管從尖端戳過去，蒂頭就掉了。" },
+                { q: "草莓放哪裡比較香？", options: ["室溫回溫", "深層冷凍", "冷藏深處"], ans: 0, desc: "吃之前稍微回溫，香氣會更濃郁。" },
+                { q: "做果醬加檸檬汁是為了？", options: ["調整酸度凝結", "殺菌", "增加重量"], ans: 0, desc: "果膠在酸性環境下較容易凝結。" },
+                { q: "冷凍草莓適合做什麼？", options: ["果昔或果醬", "直接擺盤", "送人"], ans: 0, desc: "解凍會軟爛，適合打成果汁或煮醬。" },
+                { q: "草莓跟什麼醋是絕配？", options: ["巴薩米克醋", "白醋", "烏醋"], ans: 0, desc: "義大利陳年醋跟草莓非常搭。" },
+                { q: "香水草莓的特色是？", options: ["硬度高香氣濃", "入口即化", "沒味道"], ans: 0, desc: "口感較脆，適合做蛋糕裝飾。" },
+                { q: "豐香草莓的特色是？", options: ["牛奶香口感綿", "超級酸", "超硬"], ans: 0, desc: "有濃郁的牛奶香氣，是老饕的最愛。" },
+                { q: "挑草莓聞到濃香代表？", options: ["很好吃", "快爛了", "有噴香水"], ans: 0, desc: "香氣濃郁通常代表熟度佳、甜度高。" },
+                { q: "特大顆草莓空心機率？", options: ["較高", "較低", "不一定"], ans: 0, desc: "生長過快容易導致內部空心，是正常現象。" },
+                { q: "可以用鹽水洗草莓嗎？", options: ["最好不要", "一定要", "隨便"], ans: 0, desc: "鹽水滲透壓會讓草莓軟爛，清水最好。" },
+                { q: "保存盒子要完全密封嗎？", options: ["不要(需呼吸)", "要封死", "灌氮氣"], ans: 0, desc: "草莓是活的，需要透氣才不會悶壞。" },
+                { q: "草莓發霉切掉能吃嗎？", options: ["不行", "可以", "煮過可以"], ans: 0, desc: "菌絲可能已經長滿整顆，建議丟棄。" },
+                { q: "草莓醬要怎麼取用？", options: ["乾淨無水湯匙", "剛洗過的湯匙", "小木棍"], ans: 0, desc: "挖取草莓醬，要避免沾到生水，並且蓋好冰入冰箱。" },
+                { q: "何時採草莓最漂亮？", options: ["平日早晨", "假日傍晚", "中午"], ans: 0, desc: "早晨氣溫低，果實最硬挺漂亮。" },
+                { q: "日本奢華吃法是配什麼酒？", options: ["香檳", "高粱", "啤酒"], ans: 0, desc: "草莓配香檳是經典的奢華享受。" }
+            ],
+            cat4: [
+                { q: "536 無毒草莓園堅持不使用？", options: ["化學農藥", "水", "肥料"], ans: 0, desc: "堅持無毒，友善土地與您的健康。" },
+                { q: "536 農場位於台灣哪裡？", options: ["彰化芬園", "苗栗大湖", "台北信義"], ans: 0, desc: "彰化芬園，靠近交流道，對面就是埔茂花市，歡迎來玩！" },
+                { q: "536 凍乾草莓的製作原理？", options: ["冷凍乾燥", "高溫油炸", "日曬"], ans: 0, desc: "真空冷凍乾燥技術，保留完整營養。" },
+                { q: "凍乾草莓保留多少營養？", options: ["幾乎完整", "全部流失", "一半"], ans: 0, desc: "鎖住 99% 營養，像吃新鮮草莓一樣。" },
+                { q: "536 法式冰淇淋特色是？", options: ["不加香精", "加很多水", "很甜很膩"], ans: 0, desc: "大量草莓果肉製作，濃郁天然。" },
+                { q: "除了鮮果，536 還賣什麼？", options: ["果醬/凍乾/冰淇淋", "香腸", "衣服"], ans: 0, desc: "我們有一系列的草莓加工產品喔！" },
+                { q: "最推薦的預約採果方式？", options: ["官方FB填單", "寫信", "大叫"], ans: 0, desc: "線上填單最快最方便。" },
+                { q: "生物防治法是指？", options: ["請益蟲吃害蟲", "用魔法", "念經"], ans: 0, desc: "利用自然界的天敵來防治害蟲，不灑毒藥。" },
+                { q: "外縣市如何買 536 產品？", options: ["線上宅配", "夢裡", "無法買"], ans: 0, desc: "我們有提供冷凍冷藏的宅配服務喔。" },
+                { q: "凍乾草莓的口感是？", options: ["酥酥脆脆", "軟爛", "硬得像石頭"], ans: 0, desc: "口感酥脆，像餅乾一樣好吃。" },
+                { q: "536老闆的另一個身分是？", options: ["二寶爸", "太空人", "賽車手"], ans: 0, desc: "對草莓跟對孩子一樣用心，讓大家吃得健康安心！" },
+                { q: "536 Logo 裡有什麼圖案？", options: ["草莓香瓜", "老虎", "飛機"], ans: 0, desc: "除了冬天種草莓，我們夏天種植香瓜、哈密瓜。" },
+                { q: "草莓果醬適合搭配？", options: ["吐司優格", "麻辣鍋", "白飯"], ans: 0, desc: "抹吐司或加優格都超好吃。" },
+                { q: "為何 536 草莓吃得安心？", options: ["通過無毒檢驗", "有聽音樂", "老闆很帥"], ans: 0, desc: "科學檢驗報告證明無農藥殘留。" },
+                { q: "凍乾草莓受潮軟了怎麼救？", options: ["冷凍一下", "曬太陽", "吹風機"], ans: 0, desc: "放回冷凍庫冰一下就會變回酥脆囉。" },
+                { q: "536 草莓園適合誰來？", options: ["全家親子", "只能單身", "外星人"], ans: 0, desc: "非常適合親子同樂的休閒農場。" },
+                { q: "產品包裝設計路線？", options: ["精緻送禮", "隨便包", "報紙包"], ans: 0, desc: "精緻包裝，送禮非常有面子。" },
+                { q: "來 536 採果我們最重視？", options: ["體驗與食安", "速度", "客人的錢"], ans: 0, desc: "讓客人吃得安心、玩得開心是我們的宗旨。" },
+                { q: "法式冰淇淋熱量較低是因為？", options: ["少乳脂", "份量少", "沒加糖"], ans: 0, desc: "不含大量奶油，熱量負擔更低。" },
+                { q: "想第一手知道開賣消息？", options: ["看LINE及FB粉絲頁", "打電話", "擲筊"], ans: 0, desc: "FB搜尋536無毒草莓園，或加入 LINE官方好友就不會錯過草莓季。" },
+                { q: "536 農場好停車嗎？", options: ["有停車位", "沒有", "要停路邊"], ans: 0, desc: "我們備有停車場，停車免煩惱。" },
+                { q: "凍乾草莓能保存多久？", options: ["密封可常溫久放", "一天", "一小時"], ans: 0, desc: "真空包裝下可以保存很久。" },
+                { q: "536 草莓是高架還是地面？", options: ["高架好採", "樹上", "地上"], ans: 0, desc: "高架種植，站著採草莓不用彎腰。" },
+                { q: "老闆推薦隱藏吃法？", options: ["冰鎮後吃", "煮湯", "加醬油"], ans: 0, desc: "稍微冰鎮一下，口感更緊實鮮甜。" },
+                { q: "你愛不愛 536 無毒草莓園？", options: ["愛爆！", "還好", "不愛"], ans: 0, desc: "謝謝你的愛！我們也愛你！" }
+            ],
+            cat5: [
+                { q: "市佔最高、耐運送的品種？", options: ["香水", "豐香", "桃薰"], ans: 0, desc: "香水草莓較硬，適合長途運輸。" },
+                { q: "曾是霸主、口感綿密難照顧？", options: ["豐香", "蘋果", "野莓"], ans: 0, desc: "豐香草莓抗病性差，現在越來越少見。" },
+                { q: "美姬草莓是哪兩者的結合？", options: ["香水+豐香", "鳳梨+西瓜", "蘋果+香蕉"], ans: 0, desc: "結合了香水的大顆與豐香的甜度。" },
+                { q: "台灣草莓最怕什麼天氣？", options: ["連續下雨", "大太陽", "陰天"], ans: 0, desc: "雨水會造成腐爛與病害。" },
+                { q: "為何冬天草莓比較甜？", options: ["日夜溫差大", "冬眠", "水分少"], ans: 0, desc: "溫差大有利於糖分的累積。" },
+                { q: "慣行農法是指？", options: ["安全期採收", "不灑農藥", "亂灑農藥"], ans: 0, desc: "合法使用農藥，並遵守安全採收期。" },
+                { q: "無毒耕作的核心定義？", options: ["不使用化學農藥", "有毒", "不施肥"], ans: 0, desc: "檢驗結果無農藥殘留 (N.D.)。" },
+                { q: "採收前氣溫飆高會怎樣？", options: ["易軟爛不耐放", "變乾", "變甜"], ans: 0, desc: "高溫會加速成熟但讓果肉變軟。" },
+                { q: "台灣草莓王國是指？", options: ["苗栗大湖", "屏東", "宜蘭"], ans: 0, desc: "大湖種植面積最廣，但草屯品質也很好喔！" },
+                { q: "紅蜘蛛(葉螨)喜歡什麼環境？", options: ["乾燥悶熱", "潮濕", "冷氣房"], ans: 0, desc: "高溫乾燥是紅蜘蛛爆發的溫床。" },
+                { q: "有機與慣行農業最大差別？", options: ["不使用化學農藥", "難吃", "價格"], ans: 0, desc: "有機需土地與資材全程天然，驗證極嚴格。" },
+                { q: "台灣常見白草莓叫？", options: ["桃薰/雪兔", "白海豚", "白熊"], ans: 0, desc: "通常有水蜜桃的香氣。" },
+                { q: "雨後草莓不甜是因為？", options: ["吸水稀釋糖分", "雨是酸的", "被嚇到"], ans: 0, desc: "根部吸收過多水分，會稀釋果實糖度。" },
+                { q: "鋪設銀黑布的功能？", options: ["防草保溫", "好看", "反光拍照"], ans: 0, desc: "防止雜草生長，並保持土壤溫度。" },
+                { q: "高架草莓園的優點？", options: ["方便採通風好", "有懼高症", "比較貴"], ans: 0, desc: "通風好病害少，採摘也輕鬆。" },
+                { q: "草莓染上炭疽病會？", options: ["枯萎傳染強", "更好吃", "變色"], ans: 0, desc: "這是草莓的絕症，會造成植株死亡。" },
+                { q: "草莓很大但沒味道可能是？", options: ["肥過多或膨大劑", "新品種", "忘記加糖"], ans: 0, desc: "氮肥過多會長個子不長風味。" },
+                { q: "草莓育苗最困難在什麼季節？", options: ["夏季", "冬季", "春季"], ans: 0, desc: "台灣夏天太熱，種苗照顧極為不易。" },
+                { q: "無毒草莓價格較高因為？", options: ["人力高損耗高", "貪心", "包裝貴"], ans: 0, desc: "人力及無毒資材價格高與高損耗率是主要成本。" },
+                { q: "二期花三期花是指？", options: ["不同批次結果", "花大小", "花顏色"], ans: 0, desc: "草莓是分批開花結果的。" },
+                { q: "台北市哪裡有草莓園？", options: ["內湖白石湖", "旗津", "西門町"], ans: 0, desc: "內湖山區也有草莓園喔。" },
+                { q: "園區掛黃色黏板是為了？", options: ["物理黏蟲", "裝飾", "招財"], ans: 0, desc: "利用昆蟲趨色性來黏捕害蟲。" },
+                { q: "草莓遇到寒害會？", options: ["開花發育受阻", "變冰棒", "死掉"], ans: 0, desc: "太冷會凍傷，影響發育。" },
+                { q: "天來一號是誰研發的？", options: ["苗栗農改場", "蘋果", "台積電"], ans: 0, desc: "這是台灣自行培育的品種。" },
+                { q: "如何確認是無毒草莓？", options: ["看檢驗報告", "看臉", "用舌頭舔"], ans: 0, desc: "要求出示檢驗報告最準確。" }
+            ]
+        };
+        // --- 自動補齊測試資料 (正式使用請移除) ---
+        function expandMockData(catArray, catName) {
+            while(catArray.length < 10) {
+                catArray.push({q: `${catName} 測試題目 ${catArray.length+1}`, options: ["選項A(正)", "選項B", "選項C"], ans: 0, desc: "這是測試解析"});
+            }
+        }
+        expandMockData(fullQuestionDatabase.cat1, "科普");
+        expandMockData(fullQuestionDatabase.cat2, "營養");
+        expandMockData(fullQuestionDatabase.cat3, "生活");
+        expandMockData(fullQuestionDatabase.cat4, "農場");
+        expandMockData(fullQuestionDatabase.cat5, "農業");
+        // --------------------------------------------------
+
+        // --- 變數 ---
+        let currentMode = ''; 
+        let currentQuestions = [];
+        let currentQIndex = 0;
+        let timer;
+        let timeLeft;
+        let score = 0;
+        let currentTargetSum = 0; 
+        let userAnswers = [];
+        const PASS_SCORE = 100;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+        }
+
+        function playBeep(freq = 880, duration = 0.1, type = 'sine') {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function startGame(mode, seconds, targetSum) {
+            currentMode = mode;
+            timeLeft = seconds;
+            currentTargetSum = targetSum;
+            score = 0;
+            currentQIndex = 0;
+            userAnswers = [];
+            initAudio();
+
+            const rawPool = [
+                ...getRandomElements(fullQuestionDatabase.cat1, 5),
+                ...getRandomElements(fullQuestionDatabase.cat2, 5),
+                ...getRandomElements(fullQuestionDatabase.cat3, 5),
+                ...getRandomElements(fullQuestionDatabase.cat4, 5),
+                ...getRandomElements(fullQuestionDatabase.cat5, 5)
+            ];
+            const shuffledPool = shuffleArray(rawPool);
+
+            let answerSlots = [0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1, 2,2,2,2,2,2,2,2,2];
+            answerSlots = shuffleArray(answerSlots);
+
+            currentQuestions = shuffledPool.map((qData, index) => {
+                const correctText = qData.options[qData.ans]; 
+                const wrongOptions = qData.options.filter((_, i) => i !== qData.ans);
+                const forcedSlot = answerSlots[index]; 
+                
+                let newOptions = [];
+                newOptions[forcedSlot] = { text: correctText, isCorrect: true };
+                let wrongIdx = 0;
+                for (let i = 0; i < 3; i++) {
+                    if (i !== forcedSlot) {
+                        newOptions[i] = { text: wrongOptions[wrongIdx], isCorrect: false };
+                        wrongIdx++;
+                    }
+                }
+                return { q: qData.q, desc: qData.desc, processedOptions: newOptions };
+            });
+
+            showSection('game-section');
+            updateStatsUI();
+            
+            if (timer) clearInterval(timer);
+            if (currentMode === 'speed') {
+                document.getElementById('timer-display').style.display = 'block';
+                timer = setInterval(timerTick, 1000);
+            } else {
+                document.getElementById('timer-display').style.display = 'none';
+            }
+            loadQuestion();
+        }
+
+        function timerTick() {
+            timeLeft--;
+            updateStatsUI();
+            if (timeLeft > 5) {
+                playBeep(880, 0.05); 
+            } else if (timeLeft > 0) {
+                playBeep(1200, 0.05, 'square'); 
+                setTimeout(() => playBeep(1200, 0.05, 'square'), 250);
+                setTimeout(() => playBeep(1200, 0.05, 'square'), 500);
+                setTimeout(() => playBeep(1200, 0.05, 'square'), 750);
+            } else {
+                playBeep(150, 0.8, 'sawtooth'); 
+                endGame();
+            }
+        }
+
+        function loadQuestion() {
+            const pct = (currentQIndex / currentQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${pct}%`;
+
+            if (currentQIndex >= currentQuestions.length) { endGame(); return; }
+
+            const qData = currentQuestions[currentQIndex];
+            document.getElementById('question-cat-tag').innerText = `第 ${currentQIndex + 1} / 25 題`;
+            document.getElementById('q-text').innerText = qData.q;
+            
+            const optionsDiv = document.getElementById('options-area');
+            optionsDiv.innerHTML = ''; 
+            const labels = ["A", "B", "C"];
+            qData.processedOptions.forEach((optObj, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerHTML = `<span class="opt-label">${labels[idx]}</span> ${optObj.text}`;
+                btn.onclick = () => handleAnswer(optObj.isCorrect, optObj.text, qData);
+                optionsDiv.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(isCorrect, selectedText, qData) {
+            const correctObj = qData.processedOptions.find(o => o.isCorrect);
+            userAnswers.push({
+                question: qData.q, userAns: selectedText, correctAns: correctObj.text, isCorrect: isCorrect, explanation: qData.desc
+            });
+            if (isCorrect) score += 10;
+            updateStatsUI();
+            if (currentMode === 'casual') {
+                showModal(isCorrect, qData.desc);
+            } else {
+                currentQIndex++;
+                loadQuestion();
+            }
+        }
+
+        function showModal(isCorrect, desc) {
+            const modal = document.getElementById('feedback-modal');
+            const icon = document.getElementById('modal-icon');
+            const title = document.getElementById('modal-title');
+            const text = document.getElementById('modal-desc');
+            modal.style.display = 'flex';
+            if (isCorrect) {
+                icon.innerText = "⭕"; title.innerText = "答對了！"; title.style.color = "green";
+            } else {
+                icon.innerText = "❌"; title.innerText = "答錯囉！"; title.style.color = "red";
+            }
+            text.innerHTML = desc;
+        }
+
+        function closeModal() {
+            document.getElementById('feedback-modal').style.display = 'none';
+            currentQIndex++;
+            loadQuestion();
+        }
+
+        function endGame() {
+            clearInterval(timer);
+            showSection('result-section');
+            document.getElementById('final-score').innerText = `${score} 分`;
+            
+            let passed = false;
+            let levelText = "Unknown";
+            
+            // 判斷等級文字
+            if (currentTargetSum === 100) levelText = "LV1";
+            else if (currentTargetSum === 130) levelText = "LV2";
+            else if (currentTargetSum === 160) levelText = "LV3";
+
+            if (currentMode === 'speed') {
+                if (score >= PASS_SCORE) {
+                    passed = true;
+                    document.getElementById('score-comment').innerText = `太強了！成功過關！`;
+                } else {
+                    document.getElementById('score-comment').innerText = `時間到！只差 ${(PASS_SCORE-score)/10} 題就能過關。`;
+                }
+            } else {
+                document.getElementById('score-comment').innerText = "練習結束！";
+            }
+
+            if (passed && currentMode === 'speed') {
+                document.getElementById('success-area').style.display = 'block';
+                document.getElementById('fail-area').style.display = 'none';
+                
+                // 1. 生成代碼
+                const code = generateChecksumCode(10, currentTargetSum);
+                document.getElementById('promo-code-box').innerText = code;
+                
+                // 2. 上傳到 Google Sheets
+                uploadCodeToSheet(code, levelText);
+                
+                // 重置複製按鈕
+                const btn = document.getElementById('btn-copy');
+                btn.innerText = "📋 點我複製代碼";
+            } else {
+                document.getElementById('success-area').style.display = 'none';
+                document.getElementById('fail-area').style.display = 'block';
+                if(currentMode !== 'speed') document.getElementById('fail-msg').innerText = "練習完成！";
+                else document.getElementById('fail-msg').innerText = "挑戰失敗";
+            }
+            renderAnalysis();
+        }
+
+        // --- 上傳到 Google Sheets ---
+        function uploadCodeToSheet(code, level) {
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("您的_GOOGLE")) {
+                document.getElementById('upload-status').innerText = "(未設定雲端網址，僅本機生成)";
+                return;
+            }
+            
+            document.getElementById('upload-status').innerText = "☁️ 雲端同步中...";
+            
+            // 使用 no-cors 模式發送 (瀏覽器不會報錯，但無法讀取回傳值，適合 fire-and-forget)
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', 
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: code, level: level })
+            }).then(() => {
+                document.getElementById('upload-status').innerText = "✅ 雲端紀錄完成";
+            }).catch(err => {
+                console.error(err);
+                document.getElementById('upload-status').innerText = "⚠️ 雲端連線異常，但代碼仍有效";
+            });
+        }
+
+        function copyCode() {
+            const codeText = document.getElementById('promo-code-box').innerText;
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(codeText).then(() => {
+                    const btn = document.getElementById('btn-copy');
+                    btn.innerText = "✅ 已複製！";
+                    setTimeout(() => btn.innerText = "📋 點我複製代碼", 2000);
+                }).catch(err => alert('複製失敗，請手動長按代碼複製'));
+            } else {
+                const textArea = document.createElement("textarea");
+                textArea.value = codeText;
+                textArea.style.position = "fixed";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    const btn = document.getElementById('btn-copy');
+                    btn.innerText = "✅ 已複製！";
+                    setTimeout(() => btn.innerText = "📋 點我複製代碼", 2000);
+                } catch (err) {
+                    alert('複製失敗，請手動長按代碼複製');
+                }
+                document.body.removeChild(textArea);
+            }
+        }
+
+        function renderAnalysis() {
+            const list = document.getElementById('analysis-list');
+            list.innerHTML = "";
+            userAnswers.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'analysis-item';
+                div.innerHTML = `
+                    <div style="font-weight:bold; color:#555;">Q${idx+1}. ${item.question}</div>
+                    <div style="font-size:13px; margin:5px 0;">
+                        您的答案：<span class="${item.isCorrect ? 'correct-text' : 'wrong-text'}">${item.userAns}</span>
+                        ${!item.isCorrect ? ` | 正解：<span class="correct-text">${item.correctAns}</span>` : ''}
+                    </div>
+                    <div style="background:#f4f4f4; padding:5px; color:#666; font-size:12px;">💡 ${item.explanation}</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function updateStatsUI() {
+            document.getElementById('timer-display').innerText = `⏱️ ${timeLeft}`;
+            document.getElementById('score-display').innerText = `🏆 ${score}`;
+            if (timeLeft <= 5 && currentMode === 'speed') document.getElementById('timer-display').style.color = 'red';
+            else document.getElementById('timer-display').style.color = '#d32f2f';
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function getRandomElements(arr, n) {
+            const shuffled = [...arr].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, n);
+        }
+
+        function surrenderGame() {
+            clearInterval(timer);
+            showSection('home-section');
+        }
+
+        function showSection(id) {
+            document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function generateChecksumCode(length, targetSum) {
+            const chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            let attempt = 0;
+            while (attempt < 100000) {
+                attempt++;
+                let tempStr = "";
+                let currentSum = 0;
+                for (let i = 0; i < length; i++) {
+                    const char = chars.charAt(Math.floor(Math.random() * chars.length));
+                    tempStr += char;
+                    currentSum += (char >= '0' && char <= '9') ? parseInt(char) : char.charCodeAt(0) - 64;
+                }
+                if (currentSum === targetSum) return tempStr;
+            }
+            return "ERROR-CODE";
+        }
+    </script>
+</body>
+</html>
