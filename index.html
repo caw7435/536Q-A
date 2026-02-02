@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>536 無毒草莓園 - 知識大挑戰</title>
+    <title>536 無毒草莓園 - 雲端爭霸戰</title>
     <style>
         /* --- 全局變數 --- */
         :root {
@@ -25,7 +25,7 @@
             padding: 20px;
             text-align: center;
             line-height: 1.5;
-            user-select: none; /* 防止作弊複製 */
+            user-select: none;
         }
 
         h1, h2, h3 { color: var(--primary-color); margin: 5px 0; }
@@ -40,6 +40,7 @@
         .btn-start { background: linear-gradient(135deg, #ff5252, #d32f2f); color: white; width: 90%; max-width: 350px; display: block; margin: 10px auto; }
         .btn-casual { background: linear-gradient(135deg, #42a5f5, #1976d2); color: white; width: 90%; max-width: 350px; display: block; margin: 10px auto; }
         .btn-surrender { background-color: #757575; color: white; font-size: 14px; padding: 6px 12px; }
+        .btn-rank { background-color: #FFC107; color: #333; width: 90%; max-width: 350px; display: block; margin: 10px auto; }
         
         .section { display: none; max-width: 600px; margin: 0 auto; background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
         .active { display: block; animation: fadeIn 0.3s; }
@@ -83,12 +84,16 @@
             border-radius: 50px; font-weight: bold; font-size: 18px;
             margin-bottom: 15px; border: 2px solid white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        /* 針對不同等級的顏色微調 */
         .rank-high { background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
         .rank-mid { background: linear-gradient(135deg, #81d4fa, #29b6f6); color: #fff; }
         .rank-low { background: #eee; color: #777; }
 
-        #score-comment { color:#555; font-size:16px; margin-bottom: 25px; font-weight: bold; line-height: 1.6; }
+        #score-comment { color:#555; font-size:16px; margin-bottom: 15px; font-weight: bold; line-height: 1.6; }
+
+        /* 輸入名字區 */
+        #input-name-area { background: #fffde7; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed #fbc02d; }
+        #player-name { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; width: 60%; text-align: center; }
+        .btn-save { background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px; }
 
         #analysis-list { text-align: left; margin-top: 20px; max-height: 350px; overflow-y: auto; font-size: 15px; padding-right: 5px;}
         .analysis-item { border-bottom: 1px solid #eee; padding: 15px 0; }
@@ -97,15 +102,36 @@
 
         .social-area { margin-top: 30px; }
         .btn-map { background-color: #4285F4; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; display: inline-block; font-size: 14px; }
+
+        /* --- 排行榜樣式 --- */
+        .rank-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
+        .rank-tab-btn { background: #eee; color: #666; padding: 8px 15px; font-size: 14px; border-radius: 20px; }
+        .rank-tab-btn.active-tab { background: var(--primary-color); color: white; }
+        
+        table.rank-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table.rank-table th { background: #fce4ec; color: #c2185b; padding: 10px; font-size: 14px; }
+        table.rank-table td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
+        /* 前三名顏色 */
+        table.rank-table tr:nth-child(1) td { color: #d32f2f; font-weight: bold; background: #fff8e1; }
+        table.rank-table tr:nth-child(2) td { color: #f57c00; font-weight: bold; }
+        table.rank-table tr:nth-child(3) td { color: #fbc02d; font-weight: bold; }
+
+        .rank-num { display: inline-block; width: 24px; height: 24px; line-height: 24px; border-radius: 50%; background: #eee; color: #555; font-size: 12px; }
+        tr:nth-child(1) .rank-num { background: #FFD700; color: #fff; }
+        tr:nth-child(2) .rank-num { background: #C0C0C0; color: #fff; }
+        tr:nth-child(3) .rank-num { background: #CD7F32; color: #fff; }
+
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
     </style>
 </head>
 <body>
 
     <div id="home-section" class="section active">
         <h1>🍓 536 草莓知識王</h1>
-        <p style="color: #666; font-size: 15px;">挑戰25題快問快答，看看你能獲得什麼稱號！</p>
-        <p style="font-size: 12px; color: #d32f2f; background: #ffebee; display: inline-block; padding: 5px 10px; border-radius: 20px;">📢 挑戰模式開啟音效更刺激喔！</p>
-
+        <p style="color: #666; font-size: 15px;">挑戰25題快問快答，角逐雲端排行榜！</p>
+        
         <div style="margin-top: 25px;">
             <h3 style="font-size: 16px; color: #888;">⚡ 選擇挑戰難度</h3>
             <button class="btn-start" onclick="startGame('speed', 30)">
@@ -119,6 +145,8 @@
             </button>
         </div>
 
+        <button class="btn-rank" onclick="openLeaderboard()">🏆 查看雲端英雄榜</button>
+
         <div style="margin-top: 25px;">
             <h3 style="font-size: 16px; color: #888;">🎓 練習模式</h3>
             <button class="btn-casual" onclick="startGame('casual', 0)">
@@ -128,9 +156,9 @@
 
         <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
 
-        <div class="social-area">
+       <div class="social-area">
             <a href="https://www.google.com/maps/place/@24.0164299,120.6560303,17z/data=!4m18!1m9!3m8!1s0x34693b83f1c18a45:0x8001717d1207a9e5!2zNTM254Sh5q-S6I2J6I6T5ZyS77yI5pys5ZySMeaciOS7veeUoumHj-W-iOWwke-8jOebruWJjeWBh-aXpeWPqumWi-mAseWFreaXqeS4ig!8m2!3d24.0164299!4d120.6560303!9m1!1b1!16s%2Fg%2F11h259zj2b!3m7!1s0x34693b83f1c18a45:0x8001717d1207a9e5!8m2!3d24.0164299!4d120.6560303!9m1!1b1!16s%2Fg%2F11h259zj2b?entry=ttu&g_ep=EgoyMDI2MDExMy4wIKXMDSoASAFQAw%3D%3D" target="_blank" class="btn-map">
-                📍  536無毒草莓園Google 地圖評論
+                📍  給536無毒草莓園一個好評
             </a>
         
         </div>
@@ -140,8 +168,8 @@
             </a>
         
         </div>
-
     </div>
+
     <div id="game-section" class="section">
         <div id="game-header">
             <div class="stat-box" id="timer-display">⏱️ 30</div>
@@ -176,8 +204,14 @@
         <div style="font-size:14px; color:#888; margin-top:-5px; margin-bottom:10px;">總分 250 分</div>
 
         <div id="rank-display" class="rank-badge">稱號計算中...</div>
-        
         <p id="score-comment">評語載入中...</p>
+
+        <div id="input-name-area" style="display: none;">
+            <p style="margin:0 0 10px 0; font-weight:bold; color:#f57f17;">🎉 紀錄您的榮耀時刻！</p>
+            <input type="text" id="player-name" placeholder="輸入名字 (最多8字)" maxlength="8">
+            <button id="btn-save-score" class="btn-save" onclick="saveToCloud()">上傳成績</button>
+            <div id="upload-msg" style="font-size:12px; color:#888; margin-top:5px;"></div>
+        </div>
 
         <button class="btn-surrender" onclick="surrenderGame()" style="width: 100%; background: #333;">🏠 回到首頁 / 重新挑戰</button>
 
@@ -186,7 +220,26 @@
         <div id="analysis-list"></div>
     </div>
 
+    <div id="leaderboard-section" class="section">
+        <h2>🏆 雲端英雄榜</h2>
+        
+        <div class="rank-tabs">
+            <button class="rank-tab-btn" id="tab-30" onclick="filterLeaderboard(30)">30秒快手</button>
+            <button class="rank-tab-btn" id="tab-60" onclick="filterLeaderboard(60)">60秒專家</button>
+            <button class="rank-tab-btn" id="tab-120" onclick="filterLeaderboard(120)">120秒大師</button>
+        </div>
+
+        <div id="leaderboard-content">
+            </div>
+
+        <button class="btn-surrender" onclick="showSection('home-section')" style="margin-top: 20px;">🏠 返回首頁</button>
+    </div>
+
     <script>
+        // ★★★ 請填入您部屬的 Google Apps Script 網址 ★★★
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzAk-LnkjZWnNap32SV6suP6Z03m30z6gA1fo73vWo2NZ3jZJHQP_oDk06_s5ObOJr1/exec"; 
+        // ========================================================
+
         /* ------------------------------------------------------------------ */
         /* 👇 完整題庫資料庫 */
         /* 請在此處填回您完整的125題資料庫 */
@@ -366,7 +419,7 @@
             ],
         };
 
-        // --- 自動補齊測試資料 (正式上線請移除或確保題庫夠多) ---
+        // --- 自動補齊測試資料 ---
         function expandMockData(catArray, catName) {
             while(catArray.length < 10) {
                 catArray.push({q: `${catName} 測試題目 ${catArray.length+1}`, options: ["選項A(正)", "選項B", "選項C"], ans: 0, desc: "這是測試解析"});
@@ -378,9 +431,9 @@
         expandMockData(fullQuestionDatabase.cat4, "農場");
         expandMockData(fullQuestionDatabase.cat5, "農業");
 
-        // --- 變數 ---
+        // 變數
         let currentMode = ''; 
-        let gameDuration = 0; // 紀錄該局的總時長，用來判斷稱號
+        let gameDuration = 0; 
         let currentQuestions = [];
         let currentQIndex = 0;
         let timer;
@@ -388,8 +441,11 @@
         let score = 0;
         let userAnswers = [];
         let audioCtx;
+        
+        let currentRankTitle = "";
+        let finalTimeUsed = 0; 
+        let allLeaderboardData = [];
 
-        // --- 音效模組 ---
         function initAudio() {
             if (!audioCtx) {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -412,17 +468,15 @@
             osc.stop(audioCtx.currentTime + duration);
         }
 
-        // --- 遊戲開始 ---
         function startGame(mode, seconds) {
             currentMode = mode;
             timeLeft = seconds;
-            gameDuration = seconds; // 鎖定這局的時間模式
+            gameDuration = seconds;
             score = 0;
             currentQIndex = 0;
             userAnswers = [];
             initAudio();
 
-            // 1. 抽題邏輯
             const rawPool = [
                 ...getRandomElements(fullQuestionDatabase.cat1, 5),
                 ...getRandomElements(fullQuestionDatabase.cat2, 5),
@@ -432,16 +486,13 @@
             ];
             const shuffledPool = shuffleArray(rawPool);
 
-            // 2. 防呆分配: 8個A, 8個B, 9個C
             let answerSlots = [0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1, 2,2,2,2,2,2,2,2,2];
             answerSlots = shuffleArray(answerSlots);
 
-            // 3. 題目建構
             currentQuestions = shuffledPool.map((qData, index) => {
                 const correctText = qData.options[qData.ans]; 
                 const wrongOptions = qData.options.filter((_, i) => i !== qData.ans);
                 const forcedSlot = answerSlots[index]; 
-                
                 let newOptions = [];
                 newOptions[forcedSlot] = { text: correctText, isCorrect: true };
                 let wrongIdx = 0;
@@ -486,7 +537,6 @@
         function loadQuestion() {
             const pct = (currentQIndex / currentQuestions.length) * 100;
             document.getElementById('progress-bar').style.width = `${pct}%`;
-
             if (currentQIndex >= currentQuestions.length) { endGame(); return; }
 
             const qData = currentQuestions[currentQIndex];
@@ -540,20 +590,20 @@
             loadQuestion();
         }
 
-        // --- 結算與稱號邏輯 ---
         function endGame() {
             clearInterval(timer);
             showSection('result-section');
             document.getElementById('final-score').innerText = score;
             
-            // 根據模式與分數決定稱號 (滿分250)
-            let resultData = { title: "遊客", comment: "", class: "rank-low" };
+            finalTimeUsed = (currentMode === 'casual') ? 0 : (gameDuration - timeLeft);
+            if (timeLeft < 0) finalTimeUsed = gameDuration;
 
-            // 定義分數門檻
-            const HIGH_SCORE = 200; // 答對20題
-            const MID_SCORE = 100;  // 答對10題
+            let resultData = { title: "遊客", comment: "", class: "rank-low" };
+            const HIGH_SCORE = 200; 
+            const MID_SCORE = 100;
 
             if (currentMode === 'casual') {
+                document.getElementById('input-name-area').style.display = 'none';
                  if (score >= HIGH_SCORE) {
                     resultData = { title: "💯 滿分預備軍", comment: "這實力...不去挑戰極速版太可惜了！", class: "rank-high" };
                  } else if (score >= MID_SCORE) {
@@ -562,46 +612,161 @@
                     resultData = { title: "🍀 輕鬆看世界", comment: "慢慢學比較快，草莓知識博大精深。", class: "rank-low" };
                  }
             } else {
-                // 挑戰模式 (30s, 60s, 120s)
+                document.getElementById('input-name-area').style.display = 'block';
+                document.getElementById('player-name').value = ""; 
+                document.getElementById('btn-save-score').disabled = false;
+                document.getElementById('btn-save-score').innerText = "上傳成績";
+                document.getElementById('upload-msg').innerText = "";
+
                 switch(gameDuration) {
-                    case 30: // 神人 30秒
-                        if (score >= HIGH_SCORE) {
-                            resultData = { title: "⚡ 光速草莓神人", comment: "這手速這準確度連老闆都看不到車尾燈！你是神吧？", class: "rank-high" };
-                        } else if (score >= MID_SCORE) {
-                            resultData = { title: "🏎️ 飆速草莓手", comment: "反應很快！再準一點就無敵了！", class: "rank-mid" };
-                        } else {
-                            resultData = { title: "😵 慌亂的小草莓", comment: "太快了嗎？深呼吸，再來一次！", class: "rank-low" };
-                        }
+                    case 30: 
+                        if (score >= HIGH_SCORE) resultData = { title: "⚡ 光速草莓神人", comment: "這手速連老闆都看不車尾燈！你是神吧？", class: "rank-high" };
+                        else if (score >= MID_SCORE) resultData = { title: "🏎️ 飆速草莓手", comment: "反應很快！再準一點就無敵了！", class: "rank-mid" };
+                        else resultData = { title: "😵 慌亂的小草莓", comment: "太快了嗎？深呼吸，再來一次！", class: "rank-low" };
                         break;
-                    case 60: // 大師 60秒
-                        if (score >= HIGH_SCORE) {
-                            resultData = { title: "🎓 草莓知識百科", comment: "你是不是偷偷把草莓圖鑑背下來了？", class: "rank-high" };
-                        } else if (score >= MID_SCORE) {
-                            resultData = { title: "🍓 資深草莓控", comment: "對草莓很有愛喔！基本常識難不倒你。", class: "rank-mid" };
-                        } else {
-                            resultData = { title: "👶 草莓幼幼班", comment: "沒關係，多吃幾顆草莓補補腦！", class: "rank-low" };
-                        }
+                    case 60: 
+                        if (score >= HIGH_SCORE) resultData = { title: "🎓 草莓知識百科", comment: "你是不是偷偷把草莓圖鑑背下來了？", class: "rank-high" };
+                        else if (score >= MID_SCORE) resultData = { title: "🍓 資深草莓控", comment: "對草莓很有愛喔！基本常識難不倒你。", class: "rank-mid" };
+                        else resultData = { title: "👶 草莓幼幼班", comment: "沒關係，多吃幾顆草莓補補腦！", class: "rank-low" };
                         break;
-                    case 120: // 專家 120秒
-                        if (score >= HIGH_SCORE) {
-                            resultData = { title: "👑 草莓專家", comment: "慢工出細活，這準確率令人佩服！", class: "rank-high" };
-                        } else if (score >= MID_SCORE) {
-                            resultData = { title: "🔍 沉穩的觀察家", comment: "穩紮穩打，表現不錯喔！", class: "rank-mid" };
-                        } else {
-                            resultData = { title: "🍵 佛系採草莓", comment: "志在參加，不在得獎，開心最重要。", class: "rank-low" };
-                        }
+                    case 120: 
+                        if (score >= HIGH_SCORE) resultData = { title: "👑 無毒農業大師", comment: "慢工出細活，這準確率令人佩服！", class: "rank-high" };
+                        else if (score >= MID_SCORE) resultData = { title: "🔍 沉穩的觀察家", comment: "穩紮穩打，表現不錯喔！", class: "rank-mid" };
+                        else resultData = { title: "🍵 佛系採草莓", comment: "志在參加，不在得獎，開心最重要。", class: "rank-low" };
                         break;
                 }
             }
+            
+            currentRankTitle = resultData.title; 
 
-            // 更新 UI
             const badgeEl = document.getElementById('rank-display');
             badgeEl.innerText = resultData.title;
             badgeEl.className = "rank-badge " + resultData.class;
-            
             document.getElementById('score-comment').innerText = resultData.comment;
-
             renderAnalysis();
+        }
+
+        // --- 雲端排行榜功能 ---
+        function saveToCloud() {
+            let name = document.getElementById('player-name').value.trim();
+            if (!name) name = "神秘草莓客";
+            
+            const btn = document.getElementById('btn-save-score');
+            const msg = document.getElementById('upload-msg');
+            
+            btn.disabled = true;
+            btn.innerText = "上傳中...";
+            
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("您的_GOOGLE")) {
+                msg.innerText = "⚠️ 未設定雲端網址，無法上傳";
+                btn.innerText = "上傳失敗";
+                return;
+            }
+
+            const data = {
+                name: name,
+                score: score,
+                title: currentRankTitle,
+                timeUsed: finalTimeUsed,
+                mode: gameDuration
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(() => {
+                msg.innerText = "✅ 上傳成功！";
+                btn.innerText = "已上傳";
+                setTimeout(() => openLeaderboard(gameDuration), 1000);
+            }).catch(err => {
+                msg.innerText = "⚠️ 連線錯誤";
+                btn.innerText = "重試";
+                btn.disabled = false;
+            });
+        }
+
+        function openLeaderboard(defaultMode = 30) {
+            showSection('leaderboard-section');
+            document.getElementById('leaderboard-content').innerHTML = '<div class="loader"></div>'; 
+            
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes("您的_GOOGLE")) {
+                document.getElementById('leaderboard-content').innerHTML = "<p>尚未設定雲端資料庫。</p>";
+                return;
+            }
+
+            fetch(GOOGLE_SCRIPT_URL)
+                .then(response => response.json())
+                .then(data => {
+                    allLeaderboardData = data; 
+                    filterLeaderboard(defaultMode); 
+                })
+                .catch(err => {
+                    document.getElementById('leaderboard-content').innerHTML = "<p>無法讀取排行榜資料。</p>";
+                });
+        }
+
+        function filterLeaderboard(modeSeconds) {
+            document.querySelectorAll('.rank-tab-btn').forEach(btn => btn.classList.remove('active-tab'));
+            document.getElementById('tab-' + modeSeconds).classList.add('active-tab');
+
+            let list = allLeaderboardData.filter(item => item.mode === modeSeconds);
+
+            // 排序重點：1.分數(高->低)  2.耗時(低->高)  3.日期時間(舊->新, 先到的贏)
+            list.sort((a, b) => {
+                // 1. 分數
+                if (b.score !== a.score) return b.score - a.score;
+                // 2. 耗時
+                if (a.timeUsed !== b.timeUsed) return a.timeUsed - b.timeUsed;
+                // 3. 時間 (Google Script 回傳的時間格式如 "2023/10/27 10:00:05")
+                // 使用 Date.parse 進行比較
+                return Date.parse(a.time) - Date.parse(b.time);
+            });
+
+            list = list.slice(0, 50);
+
+            const container = document.getElementById('leaderboard-content');
+            
+            if (list.length === 0) {
+                container.innerHTML = "<p style='margin-top:20px; color:#999;'>尚無紀錄，快去挑戰成為第一名！</p>";
+                return;
+            }
+
+            let html = `
+                <table class="rank-table">
+                    <thead>
+                        <tr>
+                            <th width="12%">排名</th>
+                            <th width="33%">名字/稱號</th>
+                            <th width="15%">題數</th>
+                            <th width="15%">耗時</th>
+                            <th width="25%">日期</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            list.forEach((item, index) => {
+                const correctCount = item.score / 10;
+                let dateStr = item.time ? item.time.split(' ')[0] : '-'; // 只顯示日期部分，避免太長
+                
+                html += `
+                    <tr>
+                        <td><span class="rank-num">${index + 1}</span></td>
+                        <td style="text-align:left;">
+                            <div style="font-weight:bold;">${item.name}</div>
+                            <div style="font-size:12px; color:#999;">${item.title}</div>
+                        </td>
+                        <td>${correctCount} 題</td>
+                        <td>${item.timeUsed} 秒</td>
+                        <td style="font-size:12px; color:#666;">${dateStr}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            container.innerHTML = html;
         }
 
         function renderAnalysis() {
