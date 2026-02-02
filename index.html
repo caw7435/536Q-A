@@ -90,10 +90,11 @@
 
         #score-comment { color:#555; font-size:16px; margin-bottom: 15px; font-weight: bold; line-height: 1.6; }
 
-        /* 輸入名字區 */
+        /* 輸入名字區 - 優化 */
         #input-name-area { background: #fffde7; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px dashed #fbc02d; }
-        #player-name { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; width: 60%; text-align: center; }
-        .btn-save { background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px; }
+        #player-name { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; width: 70%; text-align: center; }
+        #name-limit-hint { font-size: 12px; color: #888; margin-top: 5px; }
+        .btn-save { background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 16px; margin-top: 10px;}
 
         #analysis-list { text-align: left; margin-top: 20px; max-height: 350px; overflow-y: auto; font-size: 15px; padding-right: 5px;}
         .analysis-item { border-bottom: 1px solid #eee; padding: 15px 0; }
@@ -103,15 +104,26 @@
         .social-area { margin-top: 30px; }
         .btn-map { background-color: #4285F4; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; display: inline-block; font-size: 14px; }
 
-        /* --- 排行榜樣式 --- */
-        .rank-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 15px; }
-        .rank-tab-btn { background: #eee; color: #666; padding: 8px 15px; font-size: 14px; border-radius: 20px; }
+        /* 排行榜 RWD */
+        .rank-tabs { display: flex; justify-content: center; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
+        .rank-tab-btn { background: #eee; color: #666; padding: 8px 12px; font-size: 13px; border-radius: 20px; margin: 2px; }
         .rank-tab-btn.active-tab { background: var(--primary-color); color: white; }
         
-        table.rank-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        table.rank-table th { background: #fce4ec; color: #c2185b; padding: 10px; font-size: 14px; }
-        table.rank-table td { padding: 10px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; }
-        /* 前三名顏色 */
+        .table-scroll-container {
+            width: 100%;
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch; 
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-top: 10px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05); 
+        }
+
+        table.rank-table { width: 100%; min-width: 600px; border-collapse: collapse; }
+        table.rank-table th { background: #fce4ec; color: #c2185b; padding: 12px 8px; font-size: 14px; white-space: nowrap; }
+        table.rank-table td { padding: 12px 8px; border-bottom: 1px solid #eee; font-size: 14px; vertical-align: middle; white-space: nowrap; }
+        table.rank-table td:nth-child(1) { text-align: center; }
+        table.rank-table td:nth-child(2) { text-align: left; }
         table.rank-table tr:nth-child(1) td { color: #d32f2f; font-weight: bold; background: #fff8e1; }
         table.rank-table tr:nth-child(2) td { color: #f57c00; font-weight: bold; }
         table.rank-table tr:nth-child(3) td { color: #fbc02d; font-weight: bold; }
@@ -123,6 +135,8 @@
 
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .scroll-hint { font-size: 12px; color: #888; margin-top: 5px; animation: blink 2s infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
     </style>
 </head>
@@ -207,8 +221,12 @@
         <p id="score-comment">評語載入中...</p>
 
         <div id="input-name-area" style="display: none;">
-            <p style="margin:0 0 10px 0; font-weight:bold; color:#f57f17;">🎉 紀錄您的榮耀時刻！</p>
-            <input type="text" id="player-name" placeholder="輸入名字 (最多8字)" maxlength="8">
+            <p style="margin:0 0 5px 0; font-weight:bold; color:#f57f17;">🎉 紀錄您的榮耀時刻！</p>
+            <p style="margin:0 0 10px 0; font-size:12px; color:#666;">(中文最多10字 / 英文最多20字)</p>
+            
+            <input type="text" id="player-name" placeholder="請輸入暱稱">
+            <div id="name-limit-hint"></div>
+            
             <button id="btn-save-score" class="btn-save" onclick="saveToCloud()">上傳成績</button>
             <div id="upload-msg" style="font-size:12px; color:#888; margin-top:5px;"></div>
         </div>
@@ -229,7 +247,9 @@
             <button class="rank-tab-btn" id="tab-120" onclick="filterLeaderboard(120)">120秒大師</button>
         </div>
 
-        <div id="leaderboard-content">
+        <p class="scroll-hint">← 左右滑動表格查看完整資訊 →</p>
+
+        <div id="leaderboard-content" class="table-scroll-container">
             </div>
 
         <button class="btn-surrender" onclick="showSection('home-section')" style="margin-top: 20px;">🏠 返回首頁</button>
@@ -445,6 +465,30 @@
         let currentRankTitle = "";
         let finalTimeUsed = 0; 
         let allLeaderboardData = [];
+
+        // 監聽名字輸入，限制字數 (中10/英20)
+        document.getElementById('player-name').addEventListener('input', function(e) {
+            let val = e.target.value;
+            let maxLen = 20; // 總權重 20
+            let currentLen = 0;
+            let result = "";
+
+            for (let i = 0; i < val.length; i++) {
+                let charCode = val.charCodeAt(i);
+                // 權重計算：非ASCII(中文等)為2，其餘為1
+                let weight = (charCode > 127 || charCode === 94) ? 2 : 1;
+                
+                if (currentLen + weight > maxLen) {
+                    break;
+                }
+                currentLen += weight;
+                result += val[i];
+            }
+            
+            if (val !== result) {
+                e.target.value = result;
+            }
+        });
 
         function initAudio() {
             if (!audioCtx) {
@@ -713,14 +757,9 @@
 
             let list = allLeaderboardData.filter(item => item.mode === modeSeconds);
 
-            // 排序重點：1.分數(高->低)  2.耗時(低->高)  3.日期時間(舊->新, 先到的贏)
             list.sort((a, b) => {
-                // 1. 分數
                 if (b.score !== a.score) return b.score - a.score;
-                // 2. 耗時
                 if (a.timeUsed !== b.timeUsed) return a.timeUsed - b.timeUsed;
-                // 3. 時間 (Google Script 回傳的時間格式如 "2023/10/27 10:00:05")
-                // 使用 Date.parse 進行比較
                 return Date.parse(a.time) - Date.parse(b.time);
             });
 
@@ -737,11 +776,11 @@
                 <table class="rank-table">
                     <thead>
                         <tr>
-                            <th width="12%">排名</th>
-                            <th width="33%">名字/稱號</th>
+                            <th width="15%">排名</th>
+                            <th width="35%">名字/稱號</th>
                             <th width="15%">題數</th>
                             <th width="15%">耗時</th>
-                            <th width="25%">日期</th>
+                            <th width="20%">日期</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -749,7 +788,7 @@
 
             list.forEach((item, index) => {
                 const correctCount = item.score / 10;
-                let dateStr = item.time ? item.time.split(' ')[0] : '-'; // 只顯示日期部分，避免太長
+                let dateStr = item.time ? item.time.split(' ')[0] : '-'; 
                 
                 html += `
                     <tr>
@@ -769,6 +808,7 @@
             container.innerHTML = html;
         }
 
+        // --- 其他工具 ---
         function renderAnalysis() {
             const list = document.getElementById('analysis-list');
             list.innerHTML = "";
